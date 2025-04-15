@@ -1,4 +1,7 @@
 const db = require("../connection")
+const format = require("pg-format");
+const { articleData, commentData, topicData, userData } = require("../data/test-data");
+
 
 const seed = ({ topicData, userData, articleData, commentData }) => {
   return db.query(`DROP TABLE IF EXISTS comments, articles, users, topics;`)
@@ -45,6 +48,10 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
       votes INT DEFAULT 0
       )
       ;`)
+  })
+  .then(() => {
+    return db.format(`
+      `)
   })
 
 
