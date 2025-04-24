@@ -1,6 +1,7 @@
 const db = require("../connection")
 const format = require("pg-format");
 const { articleData, commentData, topicData, userData } = require("../data/test-data");
+const { convertTimestampToDate, formatComments } = require("./utils.js");
 
 
 const seed = ({ topicData, userData, articleData, commentData }) => {
@@ -49,13 +50,95 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
       )
       ;`)
   })
+
+
+// Inserting into Tables///////////////////////////////////////////////////////////////
+
+
   .then(() => {
-    return db.format(`
-      `)
+    const formattedTopics = topicData.map(({slug, description, img_url}) => [
+      slug,
+      description,
+      img_url
+    ])
+    const insertTopicsQuery = format(`
+      INSERT INTO topics(slug, description, img_url)
+      VALUES %L RETURNING *;
+      `, formattedTopics)
+    
+    return db.query(insertTopicsQuery)
+
   })
+  .then(() => {
+    const formattedUsers = userData.map(({username, name, avatar_url}) => [
+      username,
+      name,
+      avatar_url
+    ])
+    const insertUserQuery = format(`
+      INSERT INTO users(username, name, avatar_url)
+      VALUES %L RETURNING *;
+      `, formattedUsers)
+    
+    return db.query(insertUserQuery)
 
+  })
+  .then(() => {
+    const formattedArticles = articleData.map((article) => {
+      const convertedObj = convertTimestampToDate(article)
+      return [
+        article.title,
+        article.topic,
+        article.author,
+        article.body,
+        convertedObj.created_at,
+        article.votes,
+        article.article_img_url
+      ]})
 
+      const insertArticleQuery = format(`
+        INSERT INTO articles(title,
+        topic,
+        author,
+        body,
+        created_at,
+        votes,
+        article_img_url)
+        VALUES %L RETURNING *;
+        `, formattedArticles);
 
-  ; //<< write your first query in here.
+        // console.log(insertArticleQuery);
+
+    return db.query(insertArticleQuery)
+      
+  })
+  .then((result) => {
+    // console.log(result)
+    const lookUp = formatComments(result.rows)
+    console.log(lookUp)
+    const formattedComments = commentData.map((comment) => {
+      const convertedComment= convertTimestampToDate(comment)
+      return [
+        convertedComment.author,
+        lookUp[comment.article_title],
+        convertedComment.votes,
+        convertedComment.created_at,
+        convertedComment.body
+      ]
+    })
+    console.log(formattedComments)
+
+      const insertCommentsQuery = format(
+        `INSERT INTO comments
+        (author, article_id, votes, created_at, body)
+        VALUES %L RETURNING *;`,
+        formattedComments
+      )
+
+        // console.log(insertArticleQuery);
+
+    return db.query(insertCommentsQuery)
+      
+  })
 };
 module.exports = seed;
