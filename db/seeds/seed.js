@@ -115,7 +115,7 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
   .then((result) => {
     // console.log(result)
     const lookUp = formatComments(result.rows)
-    console.log(lookUp)
+    // console.log(lookUp)
     const formattedComments = commentData.map((comment) => {
       const convertedComment= convertTimestampToDate(comment)
       return [
@@ -126,7 +126,7 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
         convertedComment.body
       ]
     })
-    console.log(formattedComments)
+    // console.log(formattedComments)
 
       const insertCommentsQuery = format(
         `INSERT INTO comments
